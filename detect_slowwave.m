@@ -1,4 +1,4 @@
-function [SW] = detect_slowwavecfg, data)
+function [SW] = detect_slowwave(cfg, data)
 %DETECT_SLOWWAVE detect slow waves following Massimini, 2004
 % based on 3 criteria:
 % 1. less than negthr
@@ -6,7 +6,7 @@ function [SW] = detect_slowwavecfg, data)
 % 3. peak-to-peak (if cfg.p2p is not empty)
 % 
 % Use as:
-%    [SW] = sw_detect(cfg, data)
+%    [SW] = detect_slowwave(cfg, data)
 % 
 % cfg
 %  .roi(1).name = name of electrode to average
@@ -62,18 +62,6 @@ function [SW] = detect_slowwavecfg, data)
 % Note that FASST uses a 90% criterion on the max slope. It's not reported
 % in the article and I prefer not to include it. The results are therefore
 % different
-
-% 11/10/19 add return if SW is empty
-% 11/10/17 negthr was used both for computation and
-% 11/10/17 fixed bug on computation of peak2peak (no mean over roi)
-% 11/09/28 allows for multiple ROI
-% 11/09/15 combined with sw_travel
-% 11/09/15 added zeropadding if filtering
-% 11/09/15 data can be filename
-% 11/09/15 filter did not filter
-% 11/09/08 only compute slow waves
-% 11/07/26 first version, but not complete
-% 11/07/23 created
 
 %---------------------------%
 %-prepare input

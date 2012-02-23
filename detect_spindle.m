@@ -5,7 +5,7 @@ function [SP] = detect_spindle(cfg, data)
 % 2. duration above thr is longer than dur
 %
 % Use as:
-%    [SP] = sp_detect(cfg, data)
+%    [SP] = detect_spindle(cfg, data)
 %
 % cfg
 %  .roi(1).name = name of electrode to average
@@ -43,9 +43,6 @@ function [SP] = detect_spindle(cfg, data)
 %  .energytot  = total amount of energy (normalized by sampling rate: min is cfg.dur(1) * cfg.thr)
 %  .energysec  = total amount of energy divided by time (in seconds)
 %
-
-% 11/11/01 added energytot and energysec
-% 11/10/06 created
 
 %---------------------------%
 %-prepare input
