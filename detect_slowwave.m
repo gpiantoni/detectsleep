@@ -13,7 +13,10 @@ function [SW] = detect_slowwave(cfg, data)
 %  .roi(1).chan = chan index or cell with labels (better)
 %
 %  (optional)
-%  .filter = [.25 4]; (can be empty)
+%  .preproc = struct which is passed to ft_preprocessing ft_preprocessing(cfg.preproc, data)
+%             If not specified, it's low-pass filter at 4 Hz and high-pass filter at 0.25 HZ
+%             If empty, no preprocessing
+%             See ft_preprocessing
 %  .zeropad = 1; (if filter, zero padding to avoid edge artifacts)
 %  .negthr = -40; (min uV to detect a slow wave)
 %  .zcr = [.2 1]; (min and max distance between zero-crossing
@@ -62,6 +65,9 @@ function [SW] = detect_slowwave(cfg, data)
 % Note that FASST uses a 90% criterion on the max slope. It's not reported
 % in the article and I prefer not to include it. The results are therefore
 % different
+%
+% Part of DETECTSLEEP
+% See also DETECT_SLOWWAVE DETECT_SPINDLE FIND_SPINDLES_PEAKFREQ
 
 %---------------------------%
 %-prepare input
@@ -69,7 +75,17 @@ function [SW] = detect_slowwave(cfg, data)
 %-check cfg
 %-------%
 %-defaults
-if ~isfield(cfg, 'filter'); cfg.filter = [.25 4]; end
+if ~isfield(cfg, 'preproc'); 
+  cfg.preproc.lpfilter = 'yes';
+  cfg.preproc.lpfreq = 4;
+  cfg.preproc.lpfiltord = 4;
+  
+  cfg.preproc.hpfilter = 'yes';
+  cfg.preproc.hpfreq = 0.25;
+end
+
+%-------%
+%-other parameters
 if ~isfield(cfg, 'zeropad'); cfg.zeropad = 1; end
 if ~isfield(cfg, 'negthr'); cfg.negthr = -40; end
 if ~isfield(cfg, 'zcr'); cfg.zcr = [.2 1]; end
@@ -92,7 +108,7 @@ end
 %-prepare the data
 %-----------------%
 %-filtering with zero-padding
-if ~isempty(cfg.filter)
+if ~isempty(cfg.preproc)
   
   %-------%
   %-zero padding
@@ -108,14 +124,7 @@ if ~isempty(cfg.filter)
   
   %-------%
   %-filter
-  cfg1 = [];
-  cfg1.hpfilter = 'yes';
-  cfg1.hpfreq = cfg.filter(1);
-  cfg1.hpfiltord = 4;
-  
-  cfg1.lpfilter = 'yes';
-  cfg1.lpfreq = cfg.filter(2);
-  
+  cfg1 = cfg.preproc;
   cfg1.feedback = cfg.feedback;
   
   data = ft_preprocessing(cfg1, data);
