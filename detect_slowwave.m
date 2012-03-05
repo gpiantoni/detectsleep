@@ -90,7 +90,7 @@ if ~isfield(cfg, 'zeropad'); cfg.zeropad = 1; end
 if ~isfield(cfg, 'negthr'); cfg.negthr = -40; end
 if ~isfield(cfg, 'zcr'); cfg.zcr = [.2 1]; end
 if ~isfield(cfg, 'p2p'); cfg.p2p = 75; end
-if ~isfield(cfg, 'postzcr'); cfg.postzcr = 5; end
+if ~isfield(cfg, 'postzcr'); cfg.postzcr = 1; end
 if ~isfield(cfg, 'feedback'); cfg.feedback = 'textbar'; end
 if ~isfield(cfg, 'trvlnegthr'); cfg.trvlnegthr = -30; end
 %-------%
