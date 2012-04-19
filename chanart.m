@@ -1,21 +1,4 @@
-function [arttype] = hasart(trlbeg, trlend, artbeg, artend)
-%HASART check if there are artifacts in the trial
-
-arttype = 0;
-
-if any(trlbeg < artbeg & trlend > artbeg)
-  arttype = 1;
-end
-
-if any(trlbeg < artend &trlend > artend)
-  arttype = 2;
-end
-
-if any(trlbeg > artbeg & trlend < artend)
-  arttype = 3;
-end
-
-function [data, output] = artchan(cfg, data)
+function [data, output] = chanart(cfg, data)
 
 %--------------------------%
 %-reject channels with difference methods
