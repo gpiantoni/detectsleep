@@ -18,6 +18,7 @@ function sleepepochs(cfg, subj)
 %  .sleepepochs.reref.refchannel: channels used for re-referencing ({'E94' 'E190'} or 'all')
 %  .sleepepochs.reref.implicit: implicit channel ('E257')
 %
+%  .sleepepochs.detdir: directory where you want to save the slow waves
 %  .sleepepochs.detsw: if not empty, slow wave detection, you should use the
 %                      configuration options based on DETECT_SLOWWAVE
 %  .sleepepochs.detsp: if not empty, spindle detection, you should use the
@@ -28,7 +29,9 @@ function sleepepochs(cfg, subj)
 %    but in the future, the projname (GOSD) will probably go.
 %
 % OUTPUT
-%  -
+%  - depeding on the detection routine, you'll get in .sleepepochs.detdir:
+%    slowwave_stageX_XXXX.mat with slow waves for each subject
+%    spindle_stageX_XXXX.mat with spindles for each subject
 %
 % Part of DETECTSLEEP
 % see also SLEEPEPOCHS, SLEEP2FT, DETECT_ARTIFACT
@@ -149,7 +152,7 @@ for s = cfg.stage
     %-----------------%
     %-clean bad channels
     if cfg.sleepepochs.chanrej
-      [data outtmp] = chanart(cfg, data); % TODO
+      [data outtmp] = chanart(cfg, data);
       output = [output outtmp];
     end
     %-----------------%
@@ -191,13 +194,6 @@ for s = cfg.stage
     %-----------------%
     %---------------------------%
     
-    %---------------------------%
-    %-freq analysis
-    if isfield(cfg.sleepepochs, 'freq') && ~isempty(cfg.sleepepochs.freq)
-      freq = sleep_freq(cfg.sleepepochs.freq, data); % TODO: ix this, make it work with many frequencies
-    end
-    %---------------------------%
-    
   end
   %-------------------------------------%
   
@@ -206,7 +202,7 @@ for s = cfg.stage
   %-----------------%
   %-slow waves
   if isfield(cfg.sleepepochs, 'detsw') && ~isempty(cfg.sleepepochs.detsw)
-     
+    
     %-------%
     %-pure duplicates
     % (because of padding the same data is used in two consecutive trials, for example)
@@ -218,7 +214,7 @@ for s = cfg.stage
     %-------%
     %-save
     slowwave = swall;
-    swfile = sprintf('%sslowwave_stage%1d_%04d', cfg.detd, s, subj);
+    swfile = sprintf('%sslowwave_stage%1d_%04d', cfg.sleepepochs.detsw.dir, s, subj);
     save(swfile, 'slowwave')
     %-------%
     
@@ -227,7 +223,8 @@ for s = cfg.stage
   
   %-----------------%
   %-spindles
-  if any(strcmp(cfg.rundet, 'sp'))
+  if isfield(cfg.sleepepochs, 'detsp') && ~isempty(cfg.sleepepochs.detsp)
+    
     %-------%
     %-pure duplicates
     % (because of padding the same data is used in two consecutive trials, for example)
@@ -239,35 +236,16 @@ for s = cfg.stage
     %-------%
     %-save
     spindle = spall;
-    spfile = sprintf('%sspindle_stage%1d_%04d', cfg.detd, s, subj);
+    spfile = sprintf('%sspindle_stage%1d_%04d', cfg.sleepepochs.detsw.dir, s, subj);
     save(spfile, 'spindle')
     %-------%
-  end
-  %-----------------%
-  
-  %-----------------%
-  %-average over epoch
-  if any(strcmp(cfg.rundet, 'freq'))
-    
-    freqfile = sprintf('%sfreq_%1.f_%03.f', cfg.detd, s, subj);
-    for r = 1:numel(cfg.freqsw.roi)
-      freqname = ['freq_' cfg.freqsw.roi(r).name];
-      eval([freqname ' = mean(freqall{r}, 1) / ngood;'])
-      
-      if ~exist([freqfile '.mat'], 'file')
-        save(freqfile, freqname, 'ngood')
-      else
-        save(freqfile, freqname, '-append')
-      end
-      
-    end
   end
   %-----------------%
   
   output = sprintf('%saverage number of bad channels: % 5.f\n', output, nbad / numel(epch));
   %---------------------------%
   
-  clear swall sw slowwave spall sp spindle freq freqall ngood
+  clear swall sw slowwave spall sp spindle
 end
 
 %---------------------------%
