@@ -82,6 +82,8 @@ if ~isfield(cfg, 'preproc');
   
   cfg.preproc.hpfilter = 'yes';
   cfg.preproc.hpfreq = 0.25;
+   cfg.preproc.hpfiltord = 4;
+ 
 end
 
 %-------%
