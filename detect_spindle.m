@@ -8,16 +8,16 @@ function [SP] = detect_spindle(cfg, data)
 %    [SP] = detect_spindle(cfg, data)
 %
 % cfg
-%  .roi(1).name = name of electrode to average
-%  .roi(1).chan = chan index or cell with labels (better)
+%  .roi(1).name: name of electrode to average
+%  .roi(1).chan: chan index or cell with labels (better)
 %
 %  (optional)
-%  .filter = [11 15]; (can be empty)
-%  .zeropad = 1; (if filter, zero padding to avoid edge artifacts)
-%  .thr = 3; (threshold for bandpassed hilbert abs)
-%  .dur = [.5 1]; (duration above the threshold)
-%  if cfg.dur = []; then you can specify cfg.thrB, the second threshold like in Ferrarelli et al. 2007 but it's not adaptive
-%  .feedback = 'textbar' (see ft_progress)
+%  .filter: [11 15]; (can be empty)
+%  .zeropad: 1; (if filter, zero padding to avoid edge artifacts)
+%  .thr: 3; (threshold for bandpassed hilbert abs)
+%  .dur: [.5 1]; (duration above the threshold)
+%  if cfg.dur: []; then you can specify cfg.thrB, the second threshold like in Ferrarelli et al. 2007 but it's not adaptive
+%  .feedback: 'textbar' (see ft_progress)
 %
 % data
 %    data in fieldtrip format, see also sleep2ft
@@ -25,23 +25,23 @@ function [SP] = detect_spindle(cfg, data)
 %
 % SP
 %    struct for each detected spindle
-%  .trl = trial it belongs to
+%  .trl: trial it belongs to
 %
-%  .begsp_itrl = first point above threshold in samples, from beginning of the trial
-%  .begsp_iabs = first point above threshold in samples, based on sampleinfo
-%  .begsp_time = first point above threshold in seconds, based on data.time
+%  .begsp_itrl: first point above threshold in samples, from beginning of the trial
+%  .begsp_iabs: first point above threshold in samples, based on sampleinfo
+%  .begsp_time: first point above threshold in seconds, based on data.time
 %
-%  .max        = highest value
-%  .maxsp_itrl = highest value in samples, from beginning of the trial
-%  .maxsp_iabs = highest value in samples, based on sampleinfo
-%  .maxsp_time = highest value in seconds, based on data.time
+%  .max       : highest value
+%  .maxsp_itrl: highest value in samples, from beginning of the trial
+%  .maxsp_iabs: highest value in samples, based on sampleinfo
+%  .maxsp_time: highest value in seconds, based on data.time
 %
-%  .endsp_itrl = last point above threshold in samples, from beginning of the trial
-%  .endsp_iabs = last point above threshold in samples, based on sampleinfo
-%  .endsp_time = last point above threshold in seconds, based on data.time
+%  .endsp_itrl: last point above threshold in samples, from beginning of the trial
+%  .endsp_iabs: last point above threshold in samples, based on sampleinfo
+%  .endsp_time: last point above threshold in seconds, based on data.time
 %
-%  .energytot  = total amount of energy (normalized by sampling rate: min is cfg.dur(1) * cfg.thr)
-%  .energysec  = total amount of energy divided by time (in seconds)
+%  .energytot : total amount of energy (normalized by sampling rate: min is cfg.dur(1) * cfg.thr)
+%  .energysec : total amount of energy divided by time (in seconds)
 %
 
 %---------------------------%
