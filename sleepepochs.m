@@ -98,9 +98,10 @@ for s = cfg.stage
   %-loop over epch
   %TODO: preallocation (especially for freq analysis)
   swall = [];
+  spall = [];
+  remall = [];
   
   cnt = 0; % epoch count
-  ngood = 0; % it's used to calculate the mean just before saving
   nbad = 0; % bad electrodes
   
   for e = epch
@@ -192,6 +193,18 @@ for s = cfg.stage
       end
     end
     %-----------------%
+    
+        %-----------------%
+    %-detect rem
+    if isfield(cfg.sleepepochs, 'detrem') && ~isempty(cfg.sleepepochs.detrem)
+      [rem] = detect_rem(cfg.sleepepochs.detrem, data);
+      
+      if ~isempty(rem)
+        [rem.trl] = deal(e);
+        remall = [remall rem];
+      end
+    end
+    %-----------------%
     %---------------------------%
     
   end
@@ -214,7 +227,7 @@ for s = cfg.stage
     %-------%
     %-save
     slowwave = swall;
-    swfile = sprintf('%sslowwave_stage%1d_%04d', cfg.sleepepochs.detsw.dir, s, subj);
+    swfile = sprintf('%sslowwave_stage%1d_%04d', cfg.sleepepochs.detdir, s, subj);
     save(swfile, 'slowwave')
     %-------%
     
@@ -236,8 +249,29 @@ for s = cfg.stage
     %-------%
     %-save
     spindle = spall;
-    spfile = sprintf('%sspindle_stage%1d_%04d', cfg.sleepepochs.detsw.dir, s, subj);
+    spfile = sprintf('%sspindle_stage%1d_%04d', cfg.sleepepochs.detdir, s, subj);
     save(spfile, 'spindle')
+    %-------%
+  end
+  %-----------------%
+  
+    %-----------------%
+  %-rem
+  if isfield(cfg.sleepepochs, 'detrem') && ~isempty(cfg.sleepepochs.detrem)
+    
+    %-------%
+    %-pure duplicates
+    % (because of padding the same data is used in two consecutive trials, for example)
+    % check if the values of two negpeak in absolute samples are the same
+    dupl = [true diff([remall.maxsp_iabs]) ~= 0];
+    remall = remall(dupl);
+    %-------%
+    
+    %-------%
+    %-save
+    rem = remall;
+    remfile = sprintf('%srem_stage%1d_%04d', cfg.sleepepochs.detdir, s, subj);
+    save(remfile, 'rem')
     %-------%
   end
   %-----------------%
