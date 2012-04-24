@@ -263,7 +263,7 @@ for s = cfg.stage
     %-pure duplicates
     % (because of padding the same data is used in two consecutive trials, for example)
     % check if the values of two negpeak in absolute samples are the same
-    dupl = [true diff([remall.maxsp_iabs]) ~= 0];
+    dupl = [true diff([remall.begin_iabs]) ~= 0];
     remall = remall(dupl);
     %-------%
     
@@ -273,13 +273,14 @@ for s = cfg.stage
     remfile = sprintf('%srem_stage%1d_%04d', cfg.sleepepochs.detdir, s, subj);
     save(remfile, 'rem')
     %-------%
+    
   end
   %-----------------%
   
   output = sprintf('%saverage number of bad channels: % 5.f\n', output, nbad / numel(epch));
   %---------------------------%
   
-  clear swall sw slowwave spall sp spindle
+  clear swall sw slowwave spall sp spindle rem remall
 end
 
 %---------------------------%

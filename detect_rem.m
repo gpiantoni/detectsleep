@@ -47,10 +47,10 @@ function [rem] = detect_rem(cfg, data)
 %-------%
 %-defaults
 if ~isfield(cfg, 'preproc'); cfg.preproc = []; end
-if ~isfield(cfg.preproc, 'lpfilter'); cfg.preproc.pfilter = 'yes'; end
-if ~isfield(cfg.preproc, 'lpfreq'); cfg.preproc.lpfreq = 15; end
+if ~isfield(cfg.preproc, 'lpfilter'); cfg.preproc.lpfilter = 'yes'; end
+if ~isfield(cfg.preproc, 'lpfreq'); cfg.preproc.lpfreq = 20; end
 if ~isfield(cfg.preproc, 'derivative'); cfg.preproc.derivative = 'yes'; end
-if ~isfield(cfg, 'thr'); cfg.thr = 10; end
+if ~isfield(cfg, 'thr'); cfg.thr = 15; end
 %-------%
 %-----------------%
 %---------------------------%
@@ -63,6 +63,7 @@ mont.labelnew = {cfg.eog.name};
 mont.tra = zeros(numel(mont.labelnew), numel(mont.labelorg));
 
 for i = 1:numel(cfg.eog)
+  
   [~, eog1] = intersect(mont.labelorg, cfg.eog(i).eog1);
   [~, eog2] = intersect(mont.labelorg, cfg.eog(i).eog2);
   
@@ -76,7 +77,6 @@ data = ft_apply_montage(data, mont);
 
 %---------------------------%
 %-filtering
-cfg1 = [];
 cfg1 = cfg.preproc;
 data = ft_preprocessing(cfg1, data);
 %---------------------------%
@@ -86,11 +86,11 @@ data = ft_preprocessing(cfg1, data);
 rem = [];
 cnt = 0;
 
-for t = 1:numel(dat.trial)
+for t = 1:numel(data.trial)
   
-  for i = 1:numel(dat.label)
+  for i = 1:numel(data.label)
     
-    x = dat.trial{t}(i,:);
+    x = data.trial{t}(i,:);
     
     %-----------------%
     %-above threshold
