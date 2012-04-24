@@ -92,13 +92,13 @@ cfg1 = [];
 cfg1.elec = sens;
 cfg1.method = 'distance';
 cfg1.neighbourdist = cfg.sens.dist;
-neigh = ft_prepare_neighbours(cfg1);
+[~, neigh] = evalc('ft_prepare_neighbours(cfg1);');
 %-------%
 
 cfg1 = [];
 cfg1.badchannel = allbad;
 cfg1.neighbours = neigh;
 data.elec = sens;
-[data] = ft_channelrepair(cfg1, data);
+[~, data] = evalc('ft_channelrepair(cfg1, data);');
 data = rmfield(data, 'elec');
 %-----------------%
