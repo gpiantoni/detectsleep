@@ -6,7 +6,14 @@ function [data, output] = chanart(cfg, data)
 %                                    channels ('var' 'range' 'diff')
 %  .sleepepochs.chanart.auto(1).thr: in microvolts (10000, 3000, 1000)
 %
-
+%  .sens.file: file with EEG sensors. It can be sfp or mat
+%  .sens.dist: distance between sensors to consider them neighbors (in the units of cfg.sens.file)
+%
+% IN
+%   sleep data with all epochs
+%
+% OUT
+%   sleep data with all epochs, but channels have been repaired
 
 %--------------------------%
 %-reject channels with difference methods
@@ -76,12 +83,6 @@ end
 %-----------------%
 
 %-----------------%
-%-all bad and check if the reference is bad
-allbad = cat(1, badchan{:});
-output = numel(unique(allbad));
-%-----------------%
-
-%-----------------%
 %-repair channels
 %-------%
 %-create neighbors from file
@@ -95,6 +96,7 @@ cfg1.neighbourdist = cfg.sens.dist;
 [~, neigh] = evalc('ft_prepare_neighbours(cfg1);');
 %-------%
 
+allbad = cat(1, badchan{:});
 cfg1 = [];
 cfg1.badchannel = allbad;
 cfg1.neighbours = neigh;
