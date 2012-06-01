@@ -75,15 +75,15 @@ function [SW] = detect_slowwave(cfg, data)
 %-check cfg
 %-------%
 %-defaults
-if ~isfield(cfg, 'preproc'); 
+if ~isfield(cfg, 'preproc');
   cfg.preproc.lpfilter = 'yes';
   cfg.preproc.lpfreq = 4;
   cfg.preproc.lpfiltord = 4;
   
   cfg.preproc.hpfilter = 'yes';
   cfg.preproc.hpfreq = 0.25;
-   cfg.preproc.hpfiltord = 4;
- 
+  cfg.preproc.hpfiltord = 4;
+  
 end
 
 %-------%
