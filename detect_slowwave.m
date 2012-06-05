@@ -24,10 +24,15 @@ function [SW] = detect_slowwave(cfg, data)
 %  .zcr = [.2 1]; (min and max distance between zero-crossing
 %  .p2p = 75; (min uV peak-to-peak amplitude; if [], doesn't run this part)
 %  .postzcr = 1; (max distance after zerocrossing, to be test for p2p)
-%  .trvlnegthr = -30 (min uV to consider a channel having a slow wave,
+%
+%  (options for traveling)
+%  .trvl.negthr: -30 (min uV to consider a channel having a slow wave,
 %                 more liberal than for sw_detect)
-%  .trvlwnw = window around negative peak to look for each channel's
+%  .trvl.wnw: window around negative peak to look for each channel's
 %             negative peak (two numbers in ms, [-.2 .2])
+%  .trvl.dist: distance in s between the negative peaks of various
+%              electrodes to consider them in the main wave
+% 
 %  .feedback = 'textbar' (see ft_progress)
 %
 % data
@@ -57,13 +62,9 @@ function [SW] = detect_slowwave(cfg, data)
 %  .pospeak_time = positive peak in seconds, based on data.time
 %   (then cfg.p2p, if not empty, tests that pospeak_val - negpeak_val > cfg.p2p)
 %
-%  .negpeak1_itrl = first negative peak in samples, from beginning of the
-%                   trial (need not be the largest)
-%  .negpeak1_iabs = first negative peak in samples, based on sampleinfo
-%  .negpeak1_time = first negative peak in seconds, based on data.time
 %  .channel = order of channels, based on their negative peaks
 %  .label = same as channel, with labels
-%  .delay = delay from first negetive peak
+%  .delay = delay from first negative peak
 %  .maxdelay = maxdelay
 %
 % Note that FASST uses a 90% criterion on the max slope. It's not reported
@@ -98,8 +99,10 @@ if ~isfield(cfg, 'zcr'); cfg.zcr = [.2 1]; end
 if ~isfield(cfg, 'p2p'); cfg.p2p = 75; end
 if ~isfield(cfg, 'postzcr'); cfg.postzcr = 1; end
 if ~isfield(cfg, 'feedback'); cfg.feedback = 'textbar'; end
-if ~isfield(cfg, 'trvlnegthr'); cfg.trvlnegthr = -30; end
-if ~isfield(cfg, 'trvlwnw'); cfg.trvlwnw = [-.05 .2]; end
+if ~isfield(cfg, 'trvl'); cfg.trvl = []; end
+if ~isfield(cfg.trvl, 'negthr'); cfg.trvl.negthr = -30; end
+if ~isfield(cfg.trvl, 'wnw'); cfg.trvl.wnw = [-.05 .2]; end
+if ~isfield(cfg.trvl, 'dist'); cfg.trvl.dist = 0.05; end
 %-------%
 %-----------------%
 
@@ -309,16 +312,16 @@ end
 %-EXTRA: traveling of slow waves
 for i = 1:numel(SW)
   
-  %-------%
+  %-----------------%
   %-get the data
-  datsel = SW(i).negpeak_itrl + cfg.trvlwnw * data.fsample;
+  datsel = SW(i).negpeak_itrl + cfg.trvl.wnw * data.fsample;
 
   endtrl = numel(data.time{SW(i).trl});
   if datsel(1) < 1; datsel(1) = 1; end
   if datsel(2) > endtrl;  datsel(2) = endtrl; end
   
   x = data.trial{SW(i).trl}(:, datsel(1):datsel(2));
-  %-------%
+  %-----------------%
   
   %-----------------%
   %-compute minimum
@@ -326,25 +329,40 @@ for i = 1:numel(SW)
   
   %-------%
   %-keep channels above trvlnegthr
-  swchan = min_v <= cfg.trvlnegthr;
+  swchan = min_v <= cfg.trvl.negthr;
   channel = find(swchan);
   label   = data.label(swchan);
   %-------%
   
   %-------%
-  %-prepare structure
-  ichan = min_i(swchan);
-  [sdlay, schan] = sort(ichan);
+  %-calculate delay
+  ichan = min_i(swchan); % sample index of the min peak for all the channels with slow wave
+  [delay_sample, delay_order] = sort(ichan);
+  delay_sample = delay_sample - delay_sample(1); % reref to first electrode
+  delay_second = delay_sample / data.fsample;
   
-  SW(i).negpeak1_itrl = SW(i).begsw_itrl + min(sdlay);
-  SW(i).negpeak1_iabs = SW(i).begsw_iabs + min(sdlay);
-  SW(i).negpeak1_time = data.time{SW(i).trl}(SW(i).negpeak1_itrl);
-    
-  SW(i).channel = channel(schan);
-  SW(i).label = label(schan);
-  SW(i).delay = (sdlay - min(sdlay)) / data.fsample;
-  SW(i).maxdelay = max(SW(i).delay);
-  figure; plot(SW(i).delay)
+  %-sort according to delay
+  channel = channel(delay_order);
+  label   = label(delay_order);
+  %-------%
+  
+  %-------%
+  %-if the negative peak is too far between two electrodes, you only
+  %consider the first part
+  lastelec = find(diff(delay_second) > cfg.trvl.dist, 1);
+  if ~isempty(lastelec)
+    delay_second = delay_second(1:lastelec);
+    channel = channel(1:lastelec);
+    label = label(1:lastelec);
+  end
+  %-------%
+  
+  %-------%
+  %-prepare structure
+  SW(i).channel = channel;
+  SW(i).label = label;
+  SW(i).delay = delay_second;
+  SW(i).maxdelay = max(delay_second);
   %-------%
   %-----------------%
   
