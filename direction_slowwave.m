@@ -13,8 +13,9 @@ function [sw] = direction_slowwave(cfg, sw)
 %
 % SW is the output of DETECT_SLOWWAVE
 %
-% This function adds a field 'streamline' with the coordinates of the
-% longest streamline
+% This function adds a fields:
+%   .streamline: the coordinates of the longest streamline
+%   .origin: the starting point of the slow wave
 %
 % Part of DETECTSLEEP
 % See also DETECT_SLOWWAVE DETECT_SPINDLE FIND_SPINDLES_PEAKFREQ
@@ -89,7 +90,7 @@ for i = 1:numel(sw)
   trvl(firstnan:end,:) = [];
   
   sw(i).streamline = trvl;
-  sw(i).start = trvl(1,:);
+  sw(i).origin = trvl(1,:);
   %-----------------%
   
   %-----------------%
