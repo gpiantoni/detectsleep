@@ -9,8 +9,10 @@ function [SW] = detect_slowwave(cfg, data)
 %    [SW] = detect_slowwave(cfg, data)
 % 
 % cfg
-%  .roi(1).name = name of electrode to average
-%  .roi(1).chan = chan index or cell with labels (better)
+%  .roi(1).name: name of electrode to average
+%  AND
+%  .roi(1).chan: chan index or cell with labels (better)
+%  roi can be defined using DEFINE_ROI
 %
 %  (optional)
 %  .preproc = struct which is passed to ft_preprocessing ft_preprocessing(cfg.preproc, data)
@@ -24,6 +26,8 @@ function [SW] = detect_slowwave(cfg, data)
 %  .postzcr = 1; (max distance after zerocrossing, to be test for p2p)
 %  .trvlnegthr = -30 (min uV to consider a channel having a slow wave,
 %                 more liberal than for sw_detect)
+%  .trvlwnw = window around negative peak to look for each channel's
+%             negative peak (two numbers in ms, [-.2 .2])
 %  .feedback = 'textbar' (see ft_progress)
 %
 % data
@@ -95,6 +99,7 @@ if ~isfield(cfg, 'p2p'); cfg.p2p = 75; end
 if ~isfield(cfg, 'postzcr'); cfg.postzcr = 1; end
 if ~isfield(cfg, 'feedback'); cfg.feedback = 'textbar'; end
 if ~isfield(cfg, 'trvlnegthr'); cfg.trvlnegthr = -30; end
+if ~isfield(cfg, 'trvlwnw'); cfg.trvlwnw = [-.05 .2]; end
 %-------%
 %-----------------%
 
@@ -257,7 +262,7 @@ SW = SW(dupl);
 SW = SW(SWi);
 
 % don't use only negpeak
-dupl = [true diff([SW.negpeak_iabs]) > 50]; % TODO: specify this number
+dupl = [true diff([SW.negpeak_iabs]) > data.fsample/10];
 SW = SW(dupl);
 %-------%
 %-----------------%
@@ -306,8 +311,13 @@ for i = 1:numel(SW)
   
   %-------%
   %-get the data
-  datsel = SW(i).begsw_itrl:SW(i).zcr_itrl;
-  x = data.trial{SW(i).trl}(:, datsel);
+  datsel = SW(i).negpeak_itrl + cfg.trvlwnw * data.fsample;
+
+  endtrl = numel(data.time{SW(i).trl});
+  if datsel(1) < 1; datsel(1) = 1; end
+  if datsel(2) > endtrl;  datsel(2) = endtrl; end
+  
+  x = data.trial{SW(i).trl}(:, datsel(1):datsel(2));
   %-------%
   
   %-----------------%
@@ -334,7 +344,9 @@ for i = 1:numel(SW)
   SW(i).label = label(schan);
   SW(i).delay = (sdlay - min(sdlay)) / data.fsample;
   SW(i).maxdelay = max(SW(i).delay);
+  figure; plot(SW(i).delay)
   %-------%
   %-----------------%
+  
 end
 %---------------------------%
