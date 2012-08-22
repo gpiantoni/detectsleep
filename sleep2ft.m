@@ -10,12 +10,9 @@ function data = sleep2ft(cfg, D)
 %   .epoch = index of the epoch(s) to select
 %
 %  (optional)
-%   .pad = amount of padding (s)
-%   .chantype = 'EEG' 
-%   (or .channel  = 'e016' or index of channels or cell with labels)
-%   .cat = concatenate into one large file ('yes' or 'no')
+%   .preproc: any option that you want to pass to ft_preprocessing
 %
-% D: can be string or MEEG/D
+% D: can be string to FASST file or MEEG/D
 %
 % data: in fieldtrip format
 %   .trialinfo contains epoch index and epoch scoring when more trials or
@@ -25,23 +22,21 @@ function data = sleep2ft(cfg, D)
 %-input check
 %-----------------%
 %-cfg
-if ~isfield(cfg, 'pad'); cfg.pad = 0; end
-if ~isfield(cfg, 'cat'); cfg.cat = 'no'; end
-if cfg.pad ~= 0 && strcmp(cfg.cat, 'yes')
-  error('it doesn''t make sense to add padding and concatenate the epochs')
-end
+if ~isfield(cfg, 'preproc'); cfg.preproc = []; end
 %-----------------%
 
 %-----------------%
 %-D
 if ischar(D)
-  D = spm_eeg_load(D);
-elseif isstruct(D)
-  D = meeg(D);
+  load(D, 'D');
 end
 
-if ~isfield(D, 'CRC')
+D = struct(D); % don't use OO of SPM8
+
+if ~isfield(D.other, 'CRC')
   error(['Sleep file does not have CRC field'])
+else
+  score = D.other.CRC.score;
 end
 %-----------------%
 %---------------------------%
@@ -51,22 +46,14 @@ end
 if isfield(cfg, 'epoch')
   epch = cfg.epoch;
   
-  %-----------------%
-  %-try to use indicative scorer, otherwise NaN
-  if isfield(D.CRC, 'score')
-    score = D.CRC.score{1,1};
-  else
-    error('no scoring in the files')
-    % ... create NaN: not strictly necessary, only for trialinfo
-  end
-  %-----------------%
 else
+  
   %-----------------%
   %-use scorer and stage from cfg
   %-------%
   %-find scorer as index
   if ischar(cfg.scorer)
-    scorer = find(strcmp(D.CRC.score(2,:), cfg.scorer));
+    scorer = find(strcmp(score(2,:), cfg.scorer));
     
     if numel(scorer) ~= 1
       error(['could not find ' cfg.scorer ' in D.CRC.score'])
@@ -77,7 +64,7 @@ else
   end
   %-------%
   
-  score = D.CRC.score{1, scorer};
+  score = score(1, scorer);
   epch = find(ismember(score, cfg.stage));
   %-----------------%
   
@@ -85,77 +72,21 @@ end
 %---------------------------%
 
 %---------------------------%
-%-create FT structure
-data = [];
-data.fsample = fsample(D);
-
+%-read data
+% epoch has to  be vertical
 %-----------------%
-%-labels
-data.label = chanlabels(D)';
-if isfield(cfg, 'chantype') && ischar(cfg.chantype)
-  chan = find(strcmp(chantype(D), cfg.channel));
-  data.label = data.label(chan);
-  
-elseif isfield(cfg, 'channel') && ischar(cfg.channel)
-  chan = find(strcmp(chanlabels(D), cfg.channel));
-  data.label = data.label(chan);
+%-time info
+wndw = score{3,1} * D.Fsample;
+beginsleep = score{4,1}(1) * D.Fsample;
+begsample = (epoch - 1) * wndw + beginsleep;
+endsample = begsample + wndw - 1;
 
-elseif isfield(cfg, 'channel') && iscellstr(cfg.channel)
-  [~, chan] = intersect(data.label, cfg.channel);
-  data.label = data.label(chan);
-
-elseif isfield(cfg, 'channel')
-  chan = cfg.channel;
-  data.label = data.label(chan);
-
-else
-  chan = find(true(size(data.label)));
-end
+trl = [round([begsample endsample]) zeros(numel(epoch),1) epoch score{1}(epoch)'];
 %-----------------%
 
 %-----------------%
-%-epochs
-for i = 1:numel(epch)
-  e = epch(i);
-  
-  %------%
-  %-time
-  begtime = (e-1) * D.CRC.score{3,1} - cfg.pad + 1/fsample(D);
-  endtime = e * D.CRC.score{3,1} + cfg.pad;
-  time{i} = begtime:1/fsample(D):endtime;
-  %------%
-  
-  %------%
-  %-trial
-  begsam = begtime * fsample(D);
-  endsam = endtime * fsample(D);
-  trial{i} = D(chan, begsam:endsam,1);
-  %------%
-  
-  %------%
-  %-extra info into
-  sampleinfo(i, 1:2) = round([begsam endsam]); % avoid weird rounding errors
-  trialinfo(i, 1:2) = [e score(e)];
-  %------%
-  
-end
-%-----------------%
-
-%-----------------%
-%-concatenate or not
-if strcmp(cfg.cat, 'yes')
-  
-  data.time{1} = [time{:}];
-  data.trial{1} = [trial{:}];
-  data.trialinfo = trialinfo(:,2)'; % keep only scoring value (transpose bc only one trial)
-  
-else
-  
-  data.time = time;
-  data.trial = trial;
-  data.trialinfo = trialinfo;
-  data.sampleinfo = sampleinfo;
-  
-end
-%-----------------%
+tmpcfg = cfg.preproc;
+tmpcfg.dataset = [D.path D.fname];
+tmpcfg.trl = trl;
+data = ft_preprocessing(tmpcfg);
 %---------------------------%
