@@ -26,6 +26,9 @@ function [SW] = detect_slowwave(cfg, data)
 %  .postzcr = 1; (max distance after zerocrossing, to be test for p2p)
 %
 %  (options for traveling)
+%  .trvl.channel: channels to be used for calculating the traveling (if
+%                 'roi', use only channels in the ROI, otherwise specify as
+%                 in ft_channelselection)
 %  .trvl.negthr: -30 (min uV to consider a channel having a slow wave,
 %                 more liberal than for sw_detect)
 %  .trvl.wnw: window around negative peak to look for each channel's
@@ -100,6 +103,7 @@ if ~isfield(cfg, 'p2p'); cfg.p2p = 75; end
 if ~isfield(cfg, 'postzcr'); cfg.postzcr = 1; end
 if ~isfield(cfg, 'feedback'); cfg.feedback = 'textbar'; end
 if ~isfield(cfg, 'trvl'); cfg.trvl = []; end
+if ~isfield(cfg.trvl, 'channel'); cfg.trvl.channel = {'all'}; end
 if ~isfield(cfg.trvl, 'negthr'); cfg.trvl.negthr = -30; end
 if ~isfield(cfg.trvl, 'wnw'); cfg.trvl.wnw = [-.05 .2]; end
 if ~isfield(cfg.trvl, 'dist'); cfg.trvl.dist = 0.05; end
@@ -310,6 +314,16 @@ end
 
 %---------------------------%
 %-EXTRA: traveling of slow waves
+
+%-----------------%
+%-specify the channels
+if ischar(cfg.trvl.channel) && strcmp(cfg.trvl.channel, 'roi')
+  cfg.trvl.channel = unique(cat(1, cfg.roi.chan));
+end
+chan = ft_channelselection(cfg.trvl.channel, data.label);
+[chan, i_chan] =  intersect(data.label, chan); % keep the same order
+%-----------------%
+
 for i = 1:numel(SW)
   
   %-----------------%
@@ -320,7 +334,7 @@ for i = 1:numel(SW)
   if datsel(1) < 1; datsel(1) = 1; end
   if datsel(2) > endtrl;  datsel(2) = endtrl; end
   
-  x = data.trial{SW(i).trl}(:, datsel(1):datsel(2));
+  x = data.trial{SW(i).trl}(i_chan, datsel(1):datsel(2));
   %-----------------%
   
   %-----------------%
@@ -331,7 +345,7 @@ for i = 1:numel(SW)
   %-keep channels above trvlnegthr
   swchan = min_v <= cfg.trvl.negthr;
   channel = find(swchan);
-  label   = data.label(swchan);
+  label   = chan(swchan);
   %-------%
   
   %-------%
