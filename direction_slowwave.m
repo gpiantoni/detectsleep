@@ -65,6 +65,14 @@ for i = 1:numel(sw)
   eegymin = round(min(eegy)/cfg.dx) * cfg.dx;
   eegymax = round(max(eegy)/cfg.dx) * cfg.dx;
   
+  if eegxmin == eegxman
+    eegxmax = eegxmax + cfg.dx;
+  end
+  
+  if eegymin == eegyman
+    eegymax = eegymax + cfg.dx;
+  end
+  
   [grid_x, grid_y] = meshgrid(eegxmin:cfg.dx:eegxmax, eegymin:cfg.dx:eegymax);
   %-----------------%
   
