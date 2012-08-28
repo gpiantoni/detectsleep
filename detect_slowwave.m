@@ -320,6 +320,7 @@ end
 if ischar(cfg.trvl.channel) && strcmp(cfg.trvl.channel, 'roi')
   cfg.trvl.channel = unique(cat(1, cfg.roi.chan));
 end
+
 chan = ft_channelselection(cfg.trvl.channel, data.label);
 [chan, i_chan] =  intersect(data.label, chan); % keep the same order
 %-----------------%
