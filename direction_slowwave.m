@@ -33,6 +33,12 @@ if ~isfield(cfg, 'feedback'); cfg.feedback = 'textbar'; end
 %-layout
 layout = cfg.layout;
 %-----------------%
+
+%-----------------%
+%-check that slow waves have at least two points
+nelec = arrayfun(@(x) numel(x.channel), sw);
+sw = sw(nelec > 1);
+%-----------------%
 %---------------------------%
 
 %---------------------------%
