@@ -255,7 +255,7 @@ for s = cfg.stage
   end
   %-----------------%
   
-    %-----------------%
+  %-----------------%
   %-rem
   if isfield(cfg.sleepepochs, 'detrem') && ~isempty(cfg.sleepepochs.detrem)
     
