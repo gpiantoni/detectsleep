@@ -1,11 +1,11 @@
-function data = sleep2ft(cfg, D)
-%SLEEP2FT read the data in FASST format into FieldTrip
+function data = fasst2fieldtrip(cfg, D)
+%FASST2FIELDTRIP read the data in FASST format into FieldTrip
 %
 % data = sleep2ft(cfg, D)
 %
 % cfg
 %   .stage = [3 4]
-%   .scorer = 1 (string or index of D.CRC.score)
+%   .rater = 1 (string or index of D.CRC.score)
 %  OR
 %   .epoch = index of the epoch(s) to select
 %
@@ -49,23 +49,23 @@ if isfield(cfg, 'epoch')
 else
   
   %-----------------%
-  %-use scorer and stage from cfg
+  %-use rater and stage from cfg
   %-------%
-  %-find scorer as index
-  if ischar(cfg.scorer)
-    scorer = find(strcmp(score(2,:), cfg.scorer));
+  %-find rater as index
+  if ischar(cfg.rater)
+    rater = find(strcmp(score(2,:), cfg.rater));
     
-    if numel(scorer) ~= 1
-      error(['could not find ' cfg.scorer ' in D.CRC.score'])
+    if numel(rater) ~= 1
+      error(['could not find ' cfg.rater ' in D.CRC.score'])
     end
     
   else
-    scorer = cfg.scorer;
+    rater = cfg.rater;
   end
   %-------%
   
-  score = score(1, scorer);
-  epch = find(ismember(score, cfg.stage));
+  score = score(:, rater);
+  epch = find(ismember(score{1}, cfg.stage));
   %-----------------%
   
 end
@@ -73,15 +73,21 @@ end
 
 %---------------------------%
 %-read data
+%-----------------%
 % epoch has to  be vertical
+if size(epch, 1) == 1
+  epch = epch';
+end
+%-----------------%
+
 %-----------------%
 %-time info
-wndw = score{3,1} * D.Fsample;
-beginsleep = score{4,1}(1) * D.Fsample;
-begsample = (epoch - 1) * wndw + beginsleep;
+wndw = score{3} * D.Fsample;
+beginsleep = score{4}(1) * D.Fsample;
+begsample = (epch - 1) * wndw + beginsleep;
 endsample = begsample + wndw - 1;
 
-trl = [round([begsample endsample]) zeros(numel(epoch),1) epoch score{1}(epoch)'];
+trl = [round([begsample endsample begsample]) epch score{1}(epch)'];
 %-----------------%
 
 %-----------------%
