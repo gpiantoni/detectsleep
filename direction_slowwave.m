@@ -37,7 +37,7 @@ layout = cfg.layout;
 %-----------------%
 %-check that slow waves have at least two points
 nelec = arrayfun(@(x) numel(x.channel), sw);
-sw = sw(nelec > 1);
+sw = sw(nelec > 2);
 %-----------------%
 %---------------------------%
 
