@@ -65,11 +65,11 @@ for i = 1:numel(sw)
   eegymin = round(min(eegy)/cfg.dx) * cfg.dx;
   eegymax = round(max(eegy)/cfg.dx) * cfg.dx;
   
-  if eegxmin == eegxman
+  if eegxmin == eegxmax
     eegxmax = eegxmax + cfg.dx;
   end
   
-  if eegymin == eegyman
+  if eegymin == eegymax
     eegymax = eegymax + cfg.dx;
   end
   
@@ -78,8 +78,8 @@ for i = 1:numel(sw)
   
   %-----------------%
   %-interpolation and gradient
-  V = griddata(eegx, eegy, eegz, grid_x, grid_y);
-  
+  F = TriScatteredInterp(eegx, eegy, eegz);
+  V = F(grid_x, grid_y);
   [grad1, grad2] = gradient(V);
   %-----------------%
   
