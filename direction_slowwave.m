@@ -44,6 +44,7 @@ sw = sw(nelec > 2);
 %---------------------------%
 %-loop over slow waves
 ft_progress('init', cfg.feedback)
+tokeep = true(numel(sw), 1);
 
 for i = 1:numel(sw)
 
@@ -56,6 +57,15 @@ for i = 1:numel(sw)
   eegx = layout.pos(ilay,1);
   eegy = layout.pos(ilay,2);
   eegz = sw(i).delay(idelay);
+  %-----------------%
+  
+  %-----------------%
+  %-if the electrodes are perfectly collinear, you cannot compute a 2d gradient
+  % This part removes all the slow waves whose electrodes are perfectly alinged
+  if all(~diff(eegx)) || all(~diff(eegy))
+    tokeep(i) = false;
+    continue
+  end
   %-----------------%
   
   %-----------------%
@@ -143,6 +153,8 @@ for i = 1:numel(sw)
 end
 
 ft_progress('close')
+
+sw = sw(tokeep);
 %---------------------------%
 
 %---------------------------------------------------------%

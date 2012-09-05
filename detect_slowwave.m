@@ -314,7 +314,6 @@ end
 
 %---------------------------%
 %-EXTRA: traveling of slow waves
-
 %-----------------%
 %-specify the channels
 if ischar(cfg.trvl.channel) && strcmp(cfg.trvl.channel, 'roi')
